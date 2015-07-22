@@ -1,1 +1,1 @@
-# QuneoKeyboardCombo
+# QuneoSoloKeyboard
