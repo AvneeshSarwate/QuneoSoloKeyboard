@@ -1,5 +1,5 @@
 (
-var midiOut, noteToInd, noteToXY, isPadNote, padOn, padOff, octaveShift, padIndToNote, rootMove, scale, root, indToNote, padToOnPitch, dUP, dDOWN, dLEFT, dRIGHT, startInd, rootMoveHelper, createPadToNoteMap, directions, padIndToLight, changeLights, quneoOut, autoTransposeToggle, autoTranspose, chanOut, ccHandler, bendCenter;
+var midiOut, noteToInd, noteToXY, isPadNote, padOn, padOff, octaveShift, padIndToNote, rootMove, scale, root, indToNote, padToOnPitch, dUP, dDOWN, dLEFT, dRIGHT, startInd, rootMoveHelper, createPadToNoteMap, directions, padIndToLight, changeLights, quneoOut, autoTransposeToggle, autoTranspose, chanOut, ccHandler, bendCenter, chords, playingChords, chordTypeInd, chordInversionInd;
 
 MIDIIn.connectAll;
 midiOut = MIDIOut.newByName("IAC Driver", "Bus 1");
@@ -26,6 +26,10 @@ chanOut = 4;
 
 autoTranspose = true;
 
+chords = [[0, 2, 4]];
+playingChords = False;
+chordTypeInd = 0;
+chordInversionInd = 0;
 
 scale = [0, 2, 3, 5, 7, 8, 10];
 root = 48;
@@ -113,10 +117,11 @@ rootMove = {|direction|
 a = {|vel, note, chan, port|
 	if(isPadNote.(note), {
 		//noteOn
+		//TODO: if playChords - calculate chord and play it
 		var padNote = padIndToNote[noteToInd.(note)];
 		midiOut.noteOn(chanOut, padNote, vel);
-		padToOnPitch.put(noteToInd.(note), padNote);
-		(padNote + "ON").postln;
+		padToOnPitch.put(noteToInd.(note), padNote); //TODO: change dict value to list, either len 1 or chord
+		(padNote + "ON" + vel).postln;
 	});
 
 	//otherwise call rootMove based on which direction pad was hit
@@ -136,6 +141,7 @@ padOn = MIDIFunc.noteOn(a, nil, nil, 2017846184);
 b = {|vel, note, chan, port|
 	if(isPadNote.(note), {
 		//noteOff
+		//TODO: if playChords, turn off all notes in chord NOT in other chords - look at QuneoKeyboard logic
 		var padNote = padToOnPitch.at(noteToInd.(note));
 		midiOut.noteOff(chanOut, padNote);
 		padToOnPitch.removeAt(noteToInd.(note));
@@ -158,6 +164,8 @@ c = {|vel, note, chan, port|
 		midiOut.bend(chanOut, (vel / 127 * 2* bendCenter));
 		vel.postln;
 	});
+	//TODO: add individual pad vibrato -- look at QuneoKeyboard logic
+	//TODO: add rotary control selection for picking chord/transpose
 };
 ccHandler = MIDIFunc.cc(c, nil, nil, MIDIClient.sources[1].uid);
 
